@@ -1,9 +1,11 @@
 #!/usr/bin/python
+
 import tensorflow as tf
 
 from config import Config
 from model import CaptionGenerator
 from dataset import prepare_train_data, prepare_eval_data, prepare_test_data
+
 
 FLAGS = tf.app.flags.FLAGS
 
@@ -29,6 +31,7 @@ tf.flags.DEFINE_boolean('train_cnn', False,
 
 tf.flags.DEFINE_integer('beam_size', 3,
                         'The size of beam search for caption generation')
+
 
 def main(argv):
     config = Config()
@@ -64,6 +67,7 @@ def main(argv):
             model.load(sess, FLAGS.model_file)
             tf.get_default_graph().finalize()
             model.test(sess, data, vocabulary)
+
 
 if __name__ == '__main__':
     tf.app.run()

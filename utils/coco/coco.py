@@ -60,6 +60,7 @@ import string
 from tqdm import tqdm
 from nltk.tokenize import word_tokenize
 
+
 class COCO:
     def __init__(self, annotation_file=None):
         """
@@ -78,17 +79,17 @@ class COCO:
         self.img_name_to_id = {}
 
         if not annotation_file == None:
-            print 'loading annotations into memory...'
+            print('loading annotations into memory...')
             tic = time.time()
             dataset = json.load(open(annotation_file, 'r'))
-            print 'Done (t=%0.2fs)'%(time.time()- tic)
+            print('Done (t=%0.2fs)' % (time.time() - tic))
             self.dataset = dataset
             self.process_dataset()
             self.createIndex()
 
     def createIndex(self):
         # create index
-        print 'creating index...'
+        print('creating index...')
         anns = {}
         imgToAnns = {}
         catToImgs = {}
@@ -98,13 +99,13 @@ class COCO:
 
         if 'annotations' in self.dataset:
             imgToAnns = {ann['image_id']: [] for ann in self.dataset['annotations']}
-            anns =      {ann['id']:       [] for ann in self.dataset['annotations']}
+            anns = {ann['id']:       [] for ann in self.dataset['annotations']}
             for ann in self.dataset['annotations']:
                 imgToAnns[ann['image_id']] += [ann]
                 anns[ann['id']] = ann
 
         if 'images' in self.dataset:
-            imgs      = {im['id']: {} for im in self.dataset['images']}
+            imgs = {im['id']: {} for im in self.dataset['images']}
             for img in self.dataset['images']:
                 imgs[img['id']] = img
                 img_name_to_id[img['file_name']] = img['id']
@@ -117,7 +118,7 @@ class COCO:
             for ann in self.dataset['annotations']:
                 catToImgs[ann['category_id']] += [ann['image_id']]
 
-        print 'index created!'
+        print('index created!')
 
         # create class members
         self.anns = anns
@@ -129,11 +130,11 @@ class COCO:
 
     def info(self):
         """
-        Print information about the annotation file.
+        print(information about the annotation file.)
         :return:
         """
         for key, value in self.dataset['info'].items():
-            print '%s: %s'%(key, value)
+            print('%s: %s' % (key, value))
 
     def getAnnIds(self, imgIds=[], catIds=[], areaRng=[], iscrowd=None):
         """
@@ -156,7 +157,7 @@ class COCO:
                 anns = list(itertools.chain.from_iterable(lists))
             else:
                 anns = self.dataset['annotations']
-            anns = anns if len(catIds)  == 0 else [ann for ann in anns if ann['category_id'] in catIds]
+            anns = anns if len(catIds) == 0 else [ann for ann in anns if ann['category_id'] in catIds]
             anns = anns if len(areaRng) == 0 else [ann for ann in anns if ann['area'] > areaRng[0] and ann['area'] < areaRng[1]]
         if not iscrowd == None:
             ids = [ann['id'] for ann in anns if ann['iscrowd'] == iscrowd]
@@ -180,9 +181,9 @@ class COCO:
             cats = self.dataset['categories']
         else:
             cats = self.dataset['categories']
-            cats = cats if len(catNms) == 0 else [cat for cat in cats if cat['name']          in catNms]
+            cats = cats if len(catNms) == 0 else [cat for cat in cats if cat['name'] in catNms]
             cats = cats if len(supNms) == 0 else [cat for cat in cats if cat['supercategory'] in supNms]
-            cats = cats if len(catIds) == 0 else [cat for cat in cats if cat['id']            in catIds]
+            cats = cats if len(catIds) == 0 else [cat for cat in cats if cat['id'] in catIds]
         ids = [cat['id'] for cat in cats]
         return ids
 
@@ -251,25 +252,25 @@ class COCO:
         # res.dataset['info'] = copy.deepcopy(self.dataset['info'])
         # res.dataset['licenses'] = copy.deepcopy(self.dataset['licenses'])
 
-        print 'Loading and preparing results...     '
+        print('Loading and preparing results...     ')
         tic = time.time()
-        anns    = json.load(open(resFile))
+        anns = json.load(open(resFile))
         assert type(anns) == list, 'results in not an array of objects'
         annsImgIds = [ann['image_id'] for ann in anns]
         assert set(annsImgIds) == (set(annsImgIds) & set(self.getImgIds())), \
-               'Results do not correspond to current coco set'
+            'Results do not correspond to current coco set'
         assert 'caption' in anns[0]
         imgIds = set([img['id'] for img in res.dataset['images']]) & set([ann['image_id'] for ann in anns])
         res.dataset['images'] = [img for img in res.dataset['images'] if img['id'] in imgIds]
         for id, ann in enumerate(anns):
-            ann['id'] = id+1
-        print 'DONE (t=%0.2fs)'%(time.time()- tic)
+            ann['id'] = id + 1
+        print('DONE (t=%0.2fs)' % (time.time() - tic))
 
         res.dataset['annotations'] = anns
         res.createIndex()
         return res
 
-    def download( self, tarDir = None, imgIds = [] ):
+    def download(self, tarDir=None, imgIds=[]):
         '''
         Download COCO images from mscoco.org server.
         :param tarDir (str): COCO results directory name
@@ -277,7 +278,7 @@ class COCO:
         :return:
         '''
         if tarDir is None:
-            print 'Please specify target directory'
+            print('Please specify target directory')
             return -1
         if len(imgIds) == 0:
             imgs = self.imgs.values()
@@ -291,12 +292,12 @@ class COCO:
             fname = os.path.join(tarDir, img['file_name'])
             if not os.path.exists(fname):
                 urllib.urlretrieve(img['coco_url'], fname)
-            print 'downloaded %d/%d images (t=%.1fs)'%(i, N, time.time()- tic)
+            print('downloaded %d/%d images (t=%.1fs)' % (i, N, time.time() - tic))
 
     def process_dataset(self):
         for ann in self.dataset['annotations']:
             q = ann['caption'].lower()
-            if q[-1]!='.':
+            if q[-1] != '.':
                 q = q + '.'
             ann['caption'] = q
 
@@ -305,16 +306,16 @@ class COCO:
         keep_ann = {}
         keep_img = {}
         for ann in tqdm(self.dataset['annotations']):
-            if len(word_tokenize(ann['caption']))<=max_cap_len:
+            if len(word_tokenize(ann['caption'])) <= max_cap_len:
                 keep_ann[ann['id']] = keep_ann.get(ann['id'], 0) + 1
                 keep_img[ann['image_id']] = keep_img.get(ann['image_id'], 0) + 1
 
         self.dataset['annotations'] = \
-            [ann for ann in self.dataset['annotations'] \
-            if keep_ann.get(ann['id'],0)>0]
+            [ann for ann in self.dataset['annotations']
+             if keep_ann.get(ann['id'], 0) > 0]
         self.dataset['images'] = \
-            [img for img in self.dataset['images'] \
-            if keep_img.get(img['id'],0)>0]
+            [img for img in self.dataset['images']
+             if keep_img.get(img['id'], 0) > 0]
 
         self.createIndex()
 
@@ -332,11 +333,11 @@ class COCO:
             keep_img[ann['image_id']] = keep_img.get(ann['image_id'], 0) + 1
 
         self.dataset['annotations'] = \
-            [ann for ann in self.dataset['annotations'] \
-            if keep_ann.get(ann['id'],0)>0]
+            [ann for ann in self.dataset['annotations']
+             if keep_ann.get(ann['id'], 0) > 0]
         self.dataset['images'] = \
-            [img for img in self.dataset['images'] \
-            if keep_img.get(img['id'],0)>0]
+            [img for img in self.dataset['images']
+             if keep_img.get(img['id'], 0) > 0]
 
         self.createIndex()
 

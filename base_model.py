@@ -3,15 +3,15 @@ import numpy as np
 import pandas as pd
 import tensorflow as tf
 import matplotlib.pyplot as plt
-import cPickle as pickle
+import pickle
 import copy
 import json
 from tqdm import tqdm
 
 from utils.nn import NN
-from utils.coco.coco import COCO
 from utils.coco.pycocoevalcap.eval import COCOEvalCap
 from utils.misc import ImageLoader, CaptionData, TopN
+
 
 class BaseModel(object):
     def __init__(self, config):
@@ -22,8 +22,8 @@ class BaseModel(object):
         self.image_shape = [224, 224, 3]
         self.nn = NN(config)
         self.global_step = tf.Variable(0,
-                                       name = 'global_step',
-                                       trainable = False)
+                                       name='global_step',
+                                       trainable=False)
         self.build()
 
     def build(self):
@@ -50,7 +50,7 @@ class BaseModel(object):
                 _, summary, global_step = sess.run([self.opt_op,
                                                     self.summary,
                                                     self.global_step],
-                                                    feed_dict=feed_dict)
+                                                   feed_dict=feed_dict)
                 if (global_step + 1) % config.save_period == 0:
                     self.save()
                 train_writer.add_summary(summary, global_step)
@@ -75,9 +75,9 @@ class BaseModel(object):
             batch = eval_data.next_batch()
             caption_data = self.beam_search(sess, batch, vocabulary)
 
-            fake_cnt = 0 if k<eval_data.num_batches-1 \
-                         else eval_data.fake_count
-            for l in range(eval_data.batch_size-fake_cnt):
+            fake_cnt = 0 if k < eval_data.num_batches - 1 \
+                else eval_data.fake_count
+            for l in range(eval_data.batch_size - fake_cnt):
                 word_idxs = caption_data[l][0].sentence
                 score = caption_data[l][0].score
                 caption = vocabulary.get_sentence(word_idxs)
@@ -95,7 +95,7 @@ class BaseModel(object):
                     plt.axis('off')
                     plt.title(caption)
                     plt.savefig(os.path.join(config.eval_result_dir,
-                                             image_name+'_result.jpg'))
+                                             image_name + '_result.jpg'))
 
         fp = open(config.eval_result_file, 'wb')
         json.dump(results, fp)
@@ -106,6 +106,21 @@ class BaseModel(object):
         scorer = COCOEvalCap(eval_gt_coco, eval_result_coco)
         scorer.evaluate()
         print("Evaluation complete.")
+
+    def caption(self, sess, test_data, vocabulary):
+        """
+        Apply the model to a single image
+
+        :return: the generated caption
+        """
+        print("Testing the model ...")
+        batch = test_data.next_batch()
+        # config = self.config
+        caption_data = self.beam_search(sess, batch, vocabulary)
+        word_idxs = caption_data[0][0].sentence
+        score = caption_data[0][0].score
+        caption = vocabulary.get_sentence(word_idxs)
+        return caption, score
 
     def test(self, sess, test_data, vocabulary):
         """ Test the model using any given images. """
@@ -123,9 +138,9 @@ class BaseModel(object):
             batch = test_data.next_batch()
             caption_data = self.beam_search(sess, batch, vocabulary)
 
-            fake_cnt = 0 if k<test_data.num_batches-1 \
-                         else test_data.fake_count
-            for l in range(test_data.batch_size-fake_cnt):
+            fake_cnt = 0 if k < test_data.num_batches - 1 \
+                else test_data.fake_count
+            for l in range(test_data.batch_size - fake_cnt):
                 word_idxs = caption_data[l][0].sentence
                 score = caption_data[l][0].score
                 caption = vocabulary.get_sentence(word_idxs)
@@ -141,12 +156,12 @@ class BaseModel(object):
                 plt.axis('off')
                 plt.title(caption)
                 plt.savefig(os.path.join(config.test_result_dir,
-                                         image_name+'_result.jpg'))
+                                         image_name + '_result.jpg'))
 
         # Save the captions to a file
-        results = pd.DataFrame({'image_files':test_data.image_files,
-                                'caption':captions,
-                                'prob':scores})
+        results = pd.DataFrame({'image_files': test_data.image_files,
+                                'caption': captions,
+                                'prob': scores})
         results.to_csv(config.test_result_file)
         print("Testing complete.")
 
@@ -157,15 +172,15 @@ class BaseModel(object):
         images = self.image_loader.load_images(image_files)
         contexts, initial_memory, initial_output = sess.run(
             [self.conv_feats, self.initial_memory, self.initial_output],
-            feed_dict = {self.images: images})
+            feed_dict={self.images: images})
 
         partial_caption_data = []
         complete_caption_data = []
         for k in range(config.batch_size):
-            initial_beam = CaptionData(sentence = [],
-                                       memory = initial_memory[k],
-                                       output = initial_output[k],
-                                       score = 1.0)
+            initial_beam = CaptionData(sentence=[],
+                                       memory=initial_memory[k],
+                                       output=initial_output[k],
+                                       score=1.0)
             partial_caption_data.append(TopN(config.beam_size))
             partial_caption_data[-1].push(initial_beam)
             complete_caption_data.append(TopN(config.beam_size))
@@ -184,29 +199,29 @@ class BaseModel(object):
                     last_word = np.zeros((config.batch_size), np.int32)
                 else:
                     last_word = np.array([pcl[b].sentence[-1]
-                                        for pcl in partial_caption_data_lists],
-                                        np.int32)
+                                          for pcl in partial_caption_data_lists],
+                                         np.int32)
 
                 last_memory = np.array([pcl[b].memory
                                         for pcl in partial_caption_data_lists],
-                                        np.float32)
+                                       np.float32)
                 last_output = np.array([pcl[b].output
                                         for pcl in partial_caption_data_lists],
-                                        np.float32)
+                                       np.float32)
 
                 memory, output, scores = sess.run(
                     [self.memory, self.output, self.probs],
-                    feed_dict = {self.contexts: contexts,
-                                 self.last_word: last_word,
-                                 self.last_memory: last_memory,
-                                 self.last_output: last_output})
+                    feed_dict={self.contexts: contexts,
+                               self.last_word: last_word,
+                               self.last_memory: last_memory,
+                               self.last_output: last_output})
 
                 # Find the beam_size most probable next words
                 for k in range(config.batch_size):
                     caption_data = partial_caption_data_lists[k][b]
                     words_and_scores = list(enumerate(scores[k]))
                     words_and_scores.sort(key=lambda x: -x[1])
-                    words_and_scores = words_and_scores[0:config.beam_size+1]
+                    words_and_scores = words_and_scores[0:config.beam_size + 1]
 
                     # Append each of these words to the current partial caption
                     for w, s in words_and_scores:
@@ -235,7 +250,7 @@ class BaseModel(object):
         data = {v.name: v.eval() for v in tf.global_variables()}
         save_path = os.path.join(config.save_dir, str(self.global_step.eval()))
 
-        print((" Saving the model to %s..." % (save_path+".npy")))
+        print((" Saving the model to %s..." % (save_path + ".npy")))
         np.save(save_path, data)
         info_file = open(os.path.join(config.save_dir, "config.pickle"), "wb")
         config_ = copy.copy(config)
@@ -256,24 +271,24 @@ class BaseModel(object):
             global_step = config.global_step
             info_file.close()
             save_path = os.path.join(config.save_dir,
-                                     str(global_step)+".npy")
+                                     str(global_step) + ".npy")
 
-        print("Loading the model from %s..." %save_path)
-        data_dict = np.load(save_path).item()
+        print("Loading the model from %s..." % save_path)
+        data_dict = np.load(save_path, encoding="latin1").item()
         count = 0
         for v in tqdm(tf.global_variables()):
             if v.name in data_dict.keys():
                 sess.run(v.assign(data_dict[v.name]))
                 count += 1
-        print("%d tensors loaded." %count)
+        print("%d tensors loaded." % count)
 
     def load_cnn(self, session, data_path, ignore_missing=True):
         """ Load a pretrained CNN model. """
-        print("Loading the CNN from %s..." %data_path)
-        data_dict = np.load(data_path).item()
+        print("Loading the CNN from %s..." % data_path)
+        data_dict = np.load(data_path, encoding="latin1").item()
         count = 0
         for op_name in tqdm(data_dict):
-            with tf.variable_scope(op_name, reuse = True):
+            with tf.variable_scope(op_name, reuse=True):
                 for param_name, data in data_dict[op_name].iteritems():
                     try:
                         var = tf.get_variable(param_name)
@@ -281,4 +296,4 @@ class BaseModel(object):
                         count += 1
                     except ValueError:
                         pass
-        print("%d tensors loaded." %count)
+        print("%d tensors loaded." % count)

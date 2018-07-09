@@ -1,20 +1,21 @@
 # Filename: cider.py
 #
-# Description: Describes the class to compute the CIDEr (Consensus-Based Image Description Evaluation) Metric 
+# Description: Describes the class to compute the CIDEr (Consensus-Based Image Description Evaluation) Metric
 #               by Vedantam, Zitnick, and Parikh (http://arxiv.org/abs/1411.5726)
 #
 # Creation Date: Sun Feb  8 14:16:54 2015
 #
 # Authors: Ramakrishna Vedantam <vrama91@vt.edu> and Tsung-Yi Lin <tl483@cornell.edu>
 
-from cider_scorer import CiderScorer
-import pdb
+from .cider_scorer import CiderScorer
+
 
 class Cider:
     """
     Main Class to compute the CIDEr metric 
 
     """
+
     def __init__(self, test=None, refs=None, n=4, sigma=6.0):
         # set cider to sum over 1 to 4-grams
         self._n = n

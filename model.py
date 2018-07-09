@@ -1,7 +1,7 @@
 import tensorflow as tf
-import numpy as np
 
 from base_model import BaseModel
+
 
 class CaptionGenerator(BaseModel):
     def build(self):
@@ -26,30 +26,30 @@ class CaptionGenerator(BaseModel):
         config = self.config
 
         images = tf.placeholder(
-            dtype = tf.float32,
-            shape = [config.batch_size] + self.image_shape)
+            dtype=tf.float32,
+            shape=[config.batch_size] + self.image_shape)
 
-        conv1_1_feats = self.nn.conv2d(images, 64, name = 'conv1_1')
-        conv1_2_feats = self.nn.conv2d(conv1_1_feats, 64, name = 'conv1_2')
-        pool1_feats = self.nn.max_pool2d(conv1_2_feats, name = 'pool1')
+        conv1_1_feats = self.nn.conv2d(images, 64, name='conv1_1')
+        conv1_2_feats = self.nn.conv2d(conv1_1_feats, 64, name='conv1_2')
+        pool1_feats = self.nn.max_pool2d(conv1_2_feats, name='pool1')
 
-        conv2_1_feats = self.nn.conv2d(pool1_feats, 128, name = 'conv2_1')
-        conv2_2_feats = self.nn.conv2d(conv2_1_feats, 128, name = 'conv2_2')
-        pool2_feats = self.nn.max_pool2d(conv2_2_feats, name = 'pool2')
+        conv2_1_feats = self.nn.conv2d(pool1_feats, 128, name='conv2_1')
+        conv2_2_feats = self.nn.conv2d(conv2_1_feats, 128, name='conv2_2')
+        pool2_feats = self.nn.max_pool2d(conv2_2_feats, name='pool2')
 
-        conv3_1_feats = self.nn.conv2d(pool2_feats, 256, name = 'conv3_1')
-        conv3_2_feats = self.nn.conv2d(conv3_1_feats, 256, name = 'conv3_2')
-        conv3_3_feats = self.nn.conv2d(conv3_2_feats, 256, name = 'conv3_3')
-        pool3_feats = self.nn.max_pool2d(conv3_3_feats, name = 'pool3')
+        conv3_1_feats = self.nn.conv2d(pool2_feats, 256, name='conv3_1')
+        conv3_2_feats = self.nn.conv2d(conv3_1_feats, 256, name='conv3_2')
+        conv3_3_feats = self.nn.conv2d(conv3_2_feats, 256, name='conv3_3')
+        pool3_feats = self.nn.max_pool2d(conv3_3_feats, name='pool3')
 
-        conv4_1_feats = self.nn.conv2d(pool3_feats, 512, name = 'conv4_1')
-        conv4_2_feats = self.nn.conv2d(conv4_1_feats, 512, name = 'conv4_2')
-        conv4_3_feats = self.nn.conv2d(conv4_2_feats, 512, name = 'conv4_3')
-        pool4_feats = self.nn.max_pool2d(conv4_3_feats, name = 'pool4')
+        conv4_1_feats = self.nn.conv2d(pool3_feats, 512, name='conv4_1')
+        conv4_2_feats = self.nn.conv2d(conv4_1_feats, 512, name='conv4_2')
+        conv4_3_feats = self.nn.conv2d(conv4_2_feats, 512, name='conv4_3')
+        pool4_feats = self.nn.max_pool2d(conv4_3_feats, name='pool4')
 
-        conv5_1_feats = self.nn.conv2d(pool4_feats, 512, name = 'conv5_1')
-        conv5_2_feats = self.nn.conv2d(conv5_1_feats, 512, name = 'conv5_2')
-        conv5_3_feats = self.nn.conv2d(conv5_2_feats, 512, name = 'conv5_3')
+        conv5_1_feats = self.nn.conv2d(pool4_feats, 512, name='conv5_1')
+        conv5_2_feats = self.nn.conv2d(conv5_1_feats, 512, name='conv5_2')
+        conv5_3_feats = self.nn.conv2d(conv5_2_feats, 512, name='conv5_3')
 
         reshaped_conv5_3_feats = tf.reshape(conv5_3_feats,
                                             [config.batch_size, 196, 512])
@@ -64,21 +64,21 @@ class CaptionGenerator(BaseModel):
         config = self.config
 
         images = tf.placeholder(
-            dtype = tf.float32,
-            shape = [config.batch_size] + self.image_shape)
+            dtype=tf.float32,
+            shape=[config.batch_size] + self.image_shape)
 
         conv1_feats = self.nn.conv2d(images,
-                                  filters = 64,
-                                  kernel_size = (7, 7),
-                                  strides = (2, 2),
-                                  activation = None,
-                                  name = 'conv1')
+                                     filters=64,
+                                     kernel_size=(7, 7),
+                                     strides=(2, 2),
+                                     activation=None,
+                                     name='conv1')
         conv1_feats = self.nn.batch_norm(conv1_feats, 'bn_conv1')
         conv1_feats = tf.nn.relu(conv1_feats)
         pool1_feats = self.nn.max_pool2d(conv1_feats,
-                                      pool_size = (3, 3),
-                                      strides = (2, 2),
-                                      name = 'pool1')
+                                         pool_size=(3, 3),
+                                         strides=(2, 2),
+                                         name='pool1')
 
         res2a_feats = self.resnet_block(pool1_feats, 'res2a', 'bn2a', 64, 1)
         res2b_feats = self.resnet_block2(res2a_feats, 'res2b', 'bn2b', 64)
@@ -101,7 +101,7 @@ class CaptionGenerator(BaseModel):
         res5c_feats = self.resnet_block2(res5b_feats, 'res5c', 'bn5c', 512)
 
         reshaped_res5c_feats = tf.reshape(res5c_feats,
-                                         [config.batch_size, 49, 2048])
+                                          [config.batch_size, 49, 2048])
 
         self.conv_feats = reshaped_res5c_feats
         self.num_ctx = 49
@@ -111,42 +111,42 @@ class CaptionGenerator(BaseModel):
     def resnet_block(self, inputs, name1, name2, c, s=2):
         """ A basic block of ResNet. """
         branch1_feats = self.nn.conv2d(inputs,
-                                    filters = 4*c,
-                                    kernel_size = (1, 1),
-                                    strides = (s, s),
-                                    activation = None,
-                                    use_bias = False,
-                                    name = name1+'_branch1')
-        branch1_feats = self.nn.batch_norm(branch1_feats, name2+'_branch1')
+                                       filters=4 * c,
+                                       kernel_size=(1, 1),
+                                       strides=(s, s),
+                                       activation=None,
+                                       use_bias=False,
+                                       name=name1 + '_branch1')
+        branch1_feats = self.nn.batch_norm(branch1_feats, name2 + '_branch1')
 
         branch2a_feats = self.nn.conv2d(inputs,
-                                     filters = c,
-                                     kernel_size = (1, 1),
-                                     strides = (s, s),
-                                     activation = None,
-                                     use_bias = False,
-                                     name = name1+'_branch2a')
-        branch2a_feats = self.nn.batch_norm(branch2a_feats, name2+'_branch2a')
+                                        filters=c,
+                                        kernel_size=(1, 1),
+                                        strides=(s, s),
+                                        activation=None,
+                                        use_bias=False,
+                                        name=name1 + '_branch2a')
+        branch2a_feats = self.nn.batch_norm(branch2a_feats, name2 + '_branch2a')
         branch2a_feats = tf.nn.relu(branch2a_feats)
 
         branch2b_feats = self.nn.conv2d(branch2a_feats,
-                                     filters = c,
-                                     kernel_size = (3, 3),
-                                     strides = (1, 1),
-                                     activation = None,
-                                     use_bias = False,
-                                     name = name1+'_branch2b')
-        branch2b_feats = self.nn.batch_norm(branch2b_feats, name2+'_branch2b')
+                                        filters=c,
+                                        kernel_size=(3, 3),
+                                        strides=(1, 1),
+                                        activation=None,
+                                        use_bias=False,
+                                        name=name1 + '_branch2b')
+        branch2b_feats = self.nn.batch_norm(branch2b_feats, name2 + '_branch2b')
         branch2b_feats = tf.nn.relu(branch2b_feats)
 
         branch2c_feats = self.nn.conv2d(branch2b_feats,
-                                     filters = 4*c,
-                                     kernel_size = (1, 1),
-                                     strides = (1, 1),
-                                     activation = None,
-                                     use_bias = False,
-                                     name = name1+'_branch2c')
-        branch2c_feats = self.nn.batch_norm(branch2c_feats, name2+'_branch2c')
+                                        filters=4 * c,
+                                        kernel_size=(1, 1),
+                                        strides=(1, 1),
+                                        activation=None,
+                                        use_bias=False,
+                                        name=name1 + '_branch2c')
+        branch2c_feats = self.nn.batch_norm(branch2c_feats, name2 + '_branch2c')
 
         outputs = branch1_feats + branch2c_feats
         outputs = tf.nn.relu(outputs)
@@ -155,33 +155,33 @@ class CaptionGenerator(BaseModel):
     def resnet_block2(self, inputs, name1, name2, c):
         """ Another basic block of ResNet. """
         branch2a_feats = self.nn.conv2d(inputs,
-                                     filters = c,
-                                     kernel_size = (1, 1),
-                                     strides = (1, 1),
-                                     activation = None,
-                                     use_bias = False,
-                                     name = name1+'_branch2a')
-        branch2a_feats = self.nn.batch_norm(branch2a_feats, name2+'_branch2a')
+                                        filters=c,
+                                        kernel_size=(1, 1),
+                                        strides=(1, 1),
+                                        activation=None,
+                                        use_bias=False,
+                                        name=name1 + '_branch2a')
+        branch2a_feats = self.nn.batch_norm(branch2a_feats, name2 + '_branch2a')
         branch2a_feats = tf.nn.relu(branch2a_feats)
 
         branch2b_feats = self.nn.conv2d(branch2a_feats,
-                                     filters = c,
-                                     kernel_size = (3, 3),
-                                     strides = (1, 1),
-                                     activation = None,
-                                     use_bias = False,
-                                     name = name1+'_branch2b')
-        branch2b_feats = self.nn.batch_norm(branch2b_feats, name2+'_branch2b')
+                                        filters=c,
+                                        kernel_size=(3, 3),
+                                        strides=(1, 1),
+                                        activation=None,
+                                        use_bias=False,
+                                        name=name1 + '_branch2b')
+        branch2b_feats = self.nn.batch_norm(branch2b_feats, name2 + '_branch2b')
         branch2b_feats = tf.nn.relu(branch2b_feats)
 
         branch2c_feats = self.nn.conv2d(branch2b_feats,
-                                     filters = 4*c,
-                                     kernel_size = (1, 1),
-                                     strides = (1, 1),
-                                     activation = None,
-                                     use_bias = False,
-                                     name = name1+'_branch2c')
-        branch2c_feats = self.nn.batch_norm(branch2c_feats, name2+'_branch2c')
+                                        filters=4 * c,
+                                        kernel_size=(1, 1),
+                                        strides=(1, 1),
+                                        activation=None,
+                                        use_bias=False,
+                                        name=name1 + '_branch2c')
+        branch2c_feats = self.nn.batch_norm(branch2c_feats, name2 + '_branch2c')
 
         outputs = inputs + branch2c_feats
         outputs = tf.nn.relu(outputs)
@@ -196,48 +196,48 @@ class CaptionGenerator(BaseModel):
         if self.is_train:
             contexts = self.conv_feats
             sentences = tf.placeholder(
-                dtype = tf.int32,
-                shape = [config.batch_size, config.max_caption_length])
+                dtype=tf.int32,
+                shape=[config.batch_size, config.max_caption_length])
             masks = tf.placeholder(
-                dtype = tf.float32,
-                shape = [config.batch_size, config.max_caption_length])
+                dtype=tf.float32,
+                shape=[config.batch_size, config.max_caption_length])
         else:
             contexts = tf.placeholder(
-                dtype = tf.float32,
-                shape = [config.batch_size, self.num_ctx, self.dim_ctx])
+                dtype=tf.float32,
+                shape=[config.batch_size, self.num_ctx, self.dim_ctx])
             last_memory = tf.placeholder(
-                dtype = tf.float32,
-                shape = [config.batch_size, config.num_lstm_units])
+                dtype=tf.float32,
+                shape=[config.batch_size, config.num_lstm_units])
             last_output = tf.placeholder(
-                dtype = tf.float32,
-                shape = [config.batch_size, config.num_lstm_units])
+                dtype=tf.float32,
+                shape=[config.batch_size, config.num_lstm_units])
             last_word = tf.placeholder(
-                dtype = tf.int32,
-                shape = [config.batch_size])
+                dtype=tf.int32,
+                shape=[config.batch_size])
 
         # Setup the word embedding
         with tf.variable_scope("word_embedding"):
             embedding_matrix = tf.get_variable(
-                name = 'weights',
-                shape = [config.vocabulary_size, config.dim_embedding],
-                initializer = self.nn.fc_kernel_initializer,
-                regularizer = self.nn.fc_kernel_regularizer,
-                trainable = self.is_train)
+                name='weights',
+                shape=[config.vocabulary_size, config.dim_embedding],
+                initializer=self.nn.fc_kernel_initializer,
+                regularizer=self.nn.fc_kernel_regularizer,
+                trainable=self.is_train)
 
         # Setup the LSTM
         lstm = tf.nn.rnn_cell.LSTMCell(
             config.num_lstm_units,
-            initializer = self.nn.fc_kernel_initializer)
+            initializer=self.nn.fc_kernel_initializer)
         if self.is_train:
             lstm = tf.nn.rnn_cell.DropoutWrapper(
                 lstm,
-                input_keep_prob = 1.0-config.lstm_drop_rate,
-                output_keep_prob = 1.0-config.lstm_drop_rate,
-                state_keep_prob = 1.0-config.lstm_drop_rate)
+                input_keep_prob=1.0 - config.lstm_drop_rate,
+                output_keep_prob=1.0 - config.lstm_drop_rate,
+                state_keep_prob=1.0 - config.lstm_drop_rate)
 
         # Initialize the LSTM using the mean context
         with tf.variable_scope("initialize"):
-            context_mean = tf.reduce_mean(self.conv_feats, axis = 1)
+            context_mean = tf.reduce_mean(self.conv_feats, axis=1)
             initial_memory, initial_output = self.initialize(context_mean)
             initial_state = initial_memory, initial_output
 
@@ -260,11 +260,11 @@ class CaptionGenerator(BaseModel):
             # Attention mechanism
             with tf.variable_scope("attend"):
                 alpha = self.attend(contexts, last_output)
-                context = tf.reduce_sum(contexts*tf.expand_dims(alpha, 2),
-                                        axis = 1)
+                context = tf.reduce_sum(contexts * tf.expand_dims(alpha, 2),
+                                        axis=1)
                 if self.is_train:
                     tiled_masks = tf.tile(tf.expand_dims(masks[:, idx], 1),
-                                         [1, self.num_ctx])
+                                          [1, self.num_ctx])
                     masked_alpha = alpha * tiled_masks
                     alphas.append(tf.reshape(masked_alpha, [-1]))
 
@@ -283,7 +283,7 @@ class CaptionGenerator(BaseModel):
                 expanded_output = tf.concat([output,
                                              context,
                                              word_embed],
-                                             axis = 1)
+                                            axis=1)
                 logits = self.decode(expanded_output)
                 probs = tf.nn.softmax(logits)
                 prediction = tf.argmax(logits, 1)
@@ -292,8 +292,8 @@ class CaptionGenerator(BaseModel):
             # Compute the loss for this step, if necessary
             if self.is_train:
                 cross_entropy = tf.nn.sparse_softmax_cross_entropy_with_logits(
-                    labels = sentences[:, idx],
-                    logits = logits)
+                    labels=sentences[:, idx],
+                    logits=logits)
                 masked_cross_entropy = cross_entropy * masks[:, idx]
                 cross_entropies.append(masked_cross_entropy)
 
@@ -313,25 +313,25 @@ class CaptionGenerator(BaseModel):
 
         # Compute the final loss, if necessary
         if self.is_train:
-            cross_entropies = tf.stack(cross_entropies, axis = 1)
+            cross_entropies = tf.stack(cross_entropies, axis=1)
             cross_entropy_loss = tf.reduce_sum(cross_entropies) \
-                                 / tf.reduce_sum(masks)
+                / tf.reduce_sum(masks)
 
-            alphas = tf.stack(alphas, axis = 1)
+            alphas = tf.stack(alphas, axis=1)
             alphas = tf.reshape(alphas, [config.batch_size, self.num_ctx, -1])
-            attentions = tf.reduce_sum(alphas, axis = 2)
+            attentions = tf.reduce_sum(alphas, axis=2)
             diffs = tf.ones_like(attentions) - attentions
             attention_loss = config.attention_loss_factor \
-                             * tf.nn.l2_loss(diffs) \
-                             / (config.batch_size * self.num_ctx)
+                * tf.nn.l2_loss(diffs) \
+                / (config.batch_size * self.num_ctx)
 
             reg_loss = tf.losses.get_regularization_loss()
 
             total_loss = cross_entropy_loss + attention_loss + reg_loss
 
-            predictions_correct = tf.stack(predictions_correct, axis = 1)
+            predictions_correct = tf.stack(predictions_correct, axis=1)
             accuracy = tf.reduce_sum(predictions_correct) \
-                       / tf.reduce_sum(masks)
+                / tf.reduce_sum(masks)
 
         self.contexts = contexts
         if self.is_train:
@@ -362,34 +362,34 @@ class CaptionGenerator(BaseModel):
         if config.num_initalize_layers == 1:
             # use 1 fc layer to initialize
             memory = self.nn.dense(context_mean,
-                                   units = config.num_lstm_units,
-                                   activation = None,
-                                   name = 'fc_a')
+                                   units=config.num_lstm_units,
+                                   activation=None,
+                                   name='fc_a')
             output = self.nn.dense(context_mean,
-                                   units = config.num_lstm_units,
-                                   activation = None,
-                                   name = 'fc_b')
+                                   units=config.num_lstm_units,
+                                   activation=None,
+                                   name='fc_b')
         else:
             # use 2 fc layers to initialize
             temp1 = self.nn.dense(context_mean,
-                                  units = config.dim_initalize_layer,
-                                  activation = tf.tanh,
-                                  name = 'fc_a1')
+                                  units=config.dim_initalize_layer,
+                                  activation=tf.tanh,
+                                  name='fc_a1')
             temp1 = self.nn.dropout(temp1)
             memory = self.nn.dense(temp1,
-                                   units = config.num_lstm_units,
-                                   activation = None,
-                                   name = 'fc_a2')
+                                   units=config.num_lstm_units,
+                                   activation=None,
+                                   name='fc_a2')
 
             temp2 = self.nn.dense(context_mean,
-                                  units = config.dim_initalize_layer,
-                                  activation = tf.tanh,
-                                  name = 'fc_b1')
+                                  units=config.dim_initalize_layer,
+                                  activation=tf.tanh,
+                                  name='fc_b1')
             temp2 = self.nn.dropout(temp2)
             output = self.nn.dense(temp2,
-                                   units = config.num_lstm_units,
-                                   activation = None,
-                                   name = 'fc_b2')
+                                   units=config.num_lstm_units,
+                                   activation=None,
+                                   name='fc_b2')
         return memory, output
 
     def attend(self, contexts, output):
@@ -401,36 +401,36 @@ class CaptionGenerator(BaseModel):
         if config.num_attend_layers == 1:
             # use 1 fc layer to attend
             logits1 = self.nn.dense(reshaped_contexts,
-                                    units = 1,
-                                    activation = None,
-                                    use_bias = False,
-                                    name = 'fc_a')
+                                    units=1,
+                                    activation=None,
+                                    use_bias=False,
+                                    name='fc_a')
             logits1 = tf.reshape(logits1, [-1, self.num_ctx])
             logits2 = self.nn.dense(output,
-                                    units = self.num_ctx,
-                                    activation = None,
-                                    use_bias = False,
-                                    name = 'fc_b')
+                                    units=self.num_ctx,
+                                    activation=None,
+                                    use_bias=False,
+                                    name='fc_b')
             logits = logits1 + logits2
         else:
             # use 2 fc layers to attend
             temp1 = self.nn.dense(reshaped_contexts,
-                                  units = config.dim_attend_layer,
-                                  activation = tf.tanh,
-                                  name = 'fc_1a')
+                                  units=config.dim_attend_layer,
+                                  activation=tf.tanh,
+                                  name='fc_1a')
             temp2 = self.nn.dense(output,
-                                  units = config.dim_attend_layer,
-                                  activation = tf.tanh,
-                                  name = 'fc_1b')
+                                  units=config.dim_attend_layer,
+                                  activation=tf.tanh,
+                                  name='fc_1b')
             temp2 = tf.tile(tf.expand_dims(temp2, 1), [1, self.num_ctx, 1])
             temp2 = tf.reshape(temp2, [-1, config.dim_attend_layer])
             temp = temp1 + temp2
             temp = self.nn.dropout(temp)
             logits = self.nn.dense(temp,
-                                   units = 1,
-                                   activation = None,
-                                   use_bias = False,
-                                   name = 'fc_2')
+                                   units=1,
+                                   activation=None,
+                                   use_bias=False,
+                                   name='fc_2')
             logits = tf.reshape(logits, [-1, self.num_ctx])
         alpha = tf.nn.softmax(logits)
         return alpha
@@ -442,20 +442,20 @@ class CaptionGenerator(BaseModel):
         if config.num_decode_layers == 1:
             # use 1 fc layer to decode
             logits = self.nn.dense(expanded_output,
-                                   units = config.vocabulary_size,
-                                   activation = None,
-                                   name = 'fc')
+                                   units=config.vocabulary_size,
+                                   activation=None,
+                                   name='fc')
         else:
             # use 2 fc layers to decode
             temp = self.nn.dense(expanded_output,
-                                 units = config.dim_decode_layer,
-                                 activation = tf.tanh,
-                                 name = 'fc_1')
+                                 units=config.dim_decode_layer,
+                                 activation=tf.tanh,
+                                 name='fc_1')
             temp = self.nn.dropout(temp)
             logits = self.nn.dense(temp,
-                                   units = config.vocabulary_size,
-                                   activation = None,
-                                   name = 'fc_2')
+                                   units=config.vocabulary_size,
+                                   activation=None,
+                                   name='fc_2')
         return logits
 
     def build_optimizer(self):
@@ -468,47 +468,47 @@ class CaptionGenerator(BaseModel):
                 return tf.train.exponential_decay(
                     learning_rate,
                     global_step,
-                    decay_steps = config.num_steps_per_decay,
-                    decay_rate = config.learning_rate_decay_factor,
-                    staircase = True)
+                    decay_steps=config.num_steps_per_decay,
+                    decay_rate=config.learning_rate_decay_factor,
+                    staircase=True)
             learning_rate_decay_fn = _learning_rate_decay_fn
         else:
             learning_rate_decay_fn = None
 
-        with tf.variable_scope('optimizer', reuse = tf.AUTO_REUSE):
+        with tf.variable_scope('optimizer', reuse=tf.AUTO_REUSE):
             if config.optimizer == 'Adam':
                 optimizer = tf.train.AdamOptimizer(
-                    learning_rate = config.initial_learning_rate,
-                    beta1 = config.beta1,
-                    beta2 = config.beta2,
-                    epsilon = config.epsilon
-                    )
+                    learning_rate=config.initial_learning_rate,
+                    beta1=config.beta1,
+                    beta2=config.beta2,
+                    epsilon=config.epsilon
+                )
             elif config.optimizer == 'RMSProp':
                 optimizer = tf.train.RMSPropOptimizer(
-                    learning_rate = config.initial_learning_rate,
-                    decay = config.decay,
-                    momentum = config.momentum,
-                    centered = config.centered,
-                    epsilon = config.epsilon
+                    learning_rate=config.initial_learning_rate,
+                    decay=config.decay,
+                    momentum=config.momentum,
+                    centered=config.centered,
+                    epsilon=config.epsilon
                 )
             elif config.optimizer == 'Momentum':
                 optimizer = tf.train.MomentumOptimizer(
-                    learning_rate = config.initial_learning_rate,
-                    momentum = config.momentum,
-                    use_nesterov = config.use_nesterov
+                    learning_rate=config.initial_learning_rate,
+                    momentum=config.momentum,
+                    use_nesterov=config.use_nesterov
                 )
             else:
                 optimizer = tf.train.GradientDescentOptimizer(
-                    learning_rate = config.initial_learning_rate
+                    learning_rate=config.initial_learning_rate
                 )
 
             opt_op = tf.contrib.layers.optimize_loss(
-                loss = self.total_loss,
-                global_step = self.global_step,
-                learning_rate = learning_rate,
-                optimizer = optimizer,
-                clip_gradients = config.clip_gradients,
-                learning_rate_decay_fn = learning_rate_decay_fn)
+                loss=self.total_loss,
+                global_step=self.global_step,
+                learning_rate=learning_rate,
+                optimizer=optimizer,
+                clip_gradients=config.clip_gradients,
+                learning_rate_decay_fn=learning_rate_decay_fn)
 
         self.opt_op = opt_op
 
