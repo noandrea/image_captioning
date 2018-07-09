@@ -1,3 +1,7 @@
+# fix matplotlib with virtualenv
+import matplotlib
+matplotlib.use('TkAgg')
+
 
 class Config(object):
     """ Wrapper class for various (hyper)parameters. """
