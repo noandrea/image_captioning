@@ -163,11 +163,15 @@ def prepare_eval_data(config):
     print("Dataset built.")
     return coco, dataset, vocabulary
 
-def prepare_test_data(config):
+
+def prepare_test_data(config, image_path=None):
     """ Prepare the data for testing the model. """
-    files = os.listdir(config.test_image_dir)
-    image_files = [os.path.join(config.test_image_dir, f) for f in files
-        if f.lower().endswith('.jpg') or f.lower().endswith('.jpeg')]
+    if image_path is None:
+        files = os.listdir(config.test_image_dir)
+        image_files = [os.path.join(config.test_image_dir, f) for f in files if f.lower().endswith('.jpg') or f.lower().endswith('.jpeg')]
+    else:
+        image_files = [image_path]
+
     image_ids = list(range(len(image_files)))
 
     print("Building the vocabulary...")
