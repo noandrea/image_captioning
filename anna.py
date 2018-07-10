@@ -151,12 +151,14 @@ class AI(object):
         self.config = Config()
         self.config.phase = 'test'
         self.config.beam_size = 3
+        self.model_path = model_path
 
+    def load(self):
         self.sess = tf.Session()
         # testing phase
         self.model = CaptionGenerator(self.config)
         # TODO:load the right model
-        self.model.load(self.sess, model_path)
+        self.model.load(self.sess, self.model_path)
         tf.get_default_graph().finalize()
 
     def xxx_imag(self, image_path):
@@ -178,7 +180,7 @@ class AI(object):
 
 socketio = SocketIO()
 app = Flask(__name__)
-root.addHandler(app.logger)
+# root.addHandler(app.logger)
 
 
 def rpl(tx_hash, success, msg):
@@ -249,7 +251,7 @@ def allowed_file(filename):
 
 
 @app.route('/', methods=['GET'])
-def root():
+def home():
     rows = app.config['DB'].select("select * from captions", multi=True)
     return '\n'.join([r['caption'] for r in rows])
 
@@ -380,6 +382,8 @@ def cmd_start(args=None):
     app.config['DB'] = PG(settings.db_host, settings.db_user, settings.db_pass, settings.db_name)
 
     image_ai = AI(settings.captions_model_path)
+    if not args.no_ai:
+        image_ai.load()
 
     global process_worker
     process_worker = ProcessWorker(
@@ -389,8 +393,7 @@ def cmd_start(args=None):
         interval=args.polling_interval)
 
     # background worker
-    if not args.no_poll:
-        process_worker.start()
+    process_worker.start()
 
     # start the app
     logging.info('start socket.io')
@@ -410,7 +413,7 @@ if __name__ == '__main__':
                     'default':None
                 },
                 {
-                    'names': ['-b', '--no-poll'],
+                    'names': ['-n', '--no-ai'],
                     'help':'only start the socketio service not the chain polling worker',
                     'action': 'store_true',
                     'default': False

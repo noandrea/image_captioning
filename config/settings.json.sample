@@ -1,0 +1,11 @@
+{
+  "flask_secret": "secret"
+  "access_key": "whatever",
+  "db_host": "127.0.0.1",
+  "db_user": "anna",
+  "db_pass": "anna",
+  "db_name": "anna_ai",
+  "db_poolsize": "10",
+  "upload_path": "uploads",
+  "captions_model_path": "models/289999.npy"
+}
