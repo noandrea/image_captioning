@@ -1,0 +1,11 @@
+p2dn
+test
+train
+p3dn
+.vscode
+settings.json
+uploads
+models
+.git
+examples
+__pycache__

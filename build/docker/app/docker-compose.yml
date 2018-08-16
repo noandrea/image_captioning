@@ -1,0 +1,14 @@
+version: '3.1'
+services:
+  dn18_app:
+    # TODO: what image shall we use?
+    image: welance/dn2018
+    restart: unless-stopped
+    ports:
+      - "8090:5000"
+    volumes:
+      - ./data/dn2018/app/settings.json:/data/settings.json
+      - ./data/dn2018/app/db:/data/db
+      - ./data/dn2018/app/models:/data/models:ro
+
+

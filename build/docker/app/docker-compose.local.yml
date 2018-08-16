@@ -1,0 +1,14 @@
+version: '3.1'
+services:
+  dn18_app:
+    # TODO: what image shall we use?
+    image: welance/anna-ai
+    restart: unless-stopped
+    ports:
+      - "8090:5000"
+    volumes:
+      - ./settings.json:/data/settings.json:ro
+      - ./db:/data/db
+      - ./models:/data/models:ro
+
+
