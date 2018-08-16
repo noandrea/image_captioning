@@ -6,9 +6,7 @@ import sys
 import logging
 import json
 from collections import namedtuple
-import psycopg2
-import psycopg2.extras
-from psycopg2.pool import ThreadedConnectionPool
+import sqlite3
 from contextlib import contextmanager
 import argparse
 import threading
@@ -16,8 +14,8 @@ from queue import Queue
 import time
 
 # flask
-from flask import Flask, jsonify, abort, flash, request, redirect, url_for, render_template
-from flask_socketio import SocketIO, emit
+from flask import Flask, jsonify, abort, flash, request, redirect, render_template
+from flask_socketio import SocketIO
 from werkzeug.utils import secure_filename
 
 # hashing
@@ -88,21 +86,39 @@ class UnsupportedStateException(Exception):
 #
 
 
-class PG(object):
-    def __init__(self, host, user, password, database, poolsize=10):
-        connect_str = "dbname='{}' user='{}' host='{}' password='{}'".format(
-            database, user, host, password)
-        self.pool = ThreadedConnectionPool(1, poolsize, dsn=connect_str)
+class DB(object):
+    def __init__(self, db_path):
+        logging.info(f"using database at {db_path}")
+        do_init = False if os.path.exists(db_path) else True
+        self.db_path = db_path
+        self.init_db(do_init)
+
+    def init_db(self, do_init):
+        if not do_init:
+            logging.info("db exists")
+            return
+        logging.info("initializing database")
+        with open("initdb.d/init.sql") as fp:
+            sql = fp.read()
+            self.execute(sql)
 
     @contextmanager
     def getcursor(self):
         """retrieve a cursor from the database"""
-        con = self.pool.getconn()
         try:
-            yield con.cursor(cursor_factory=psycopg2.extras.DictCursor)
+            conn = sqlite3.connect(self.db_path)
+
+            def dict_factory(cursor, row):
+                d = {}
+                for idx, col in enumerate(cursor.description):
+                    d[col[0]] = row[idx]
+                return d
+            
+            conn.row_factory = dict_factory
+            yield conn.cursor()
         finally:
-            con.commit()
-            self.pool.putconn(con)
+            conn.commit()
+            conn.close()
 
     def execute(self, query, params=()):
         """run a database update
@@ -337,7 +353,7 @@ class ProcessWorker(object):
             with open(imagpath, 'rb') as fp:
                 # calculate the digest
                 hexdigest = blake2b(data=fp.read(), digest_size=64, encoder=nacl.encoding.HexEncoder).decode("utf-8")
-                row = self.db.select("select caption from captions where hexdigest = %s", (hexdigest,))
+                row = self.db.select("select caption from captions where hexdigest = ?", (hexdigest,))
                 if row is not None:
                     # image exists
                     caption = row.get('caption')
@@ -346,7 +362,7 @@ class ProcessWorker(object):
                     # generate caption
                     caption, p = self.ai.image_caption(imagpath)
                     # this will als
-                    self.db.execute("insert into captions(hexdigest,file_name, caption,probability) values (%s,%s,%s,%s)",
+                    self.db.execute("insert into captions(hexdigest,file_name, caption,probability) values (?,?,?,?)",
                                     (hexdigest, os.path.basename(imagpath), caption, p))
                     logging.info(f"image {imagpath}, caption {caption}, {p}")
                 # emit("describe", {"digest": hexdigest, "caption": caption})
@@ -385,7 +401,7 @@ def cmd_start(args=None):
     app.config['UPLOAD_FOLDER'] = settings.upload_path
     app.config['SECRET_KEY'] = settings.flask_secret
     app.config['UPLOAD_QUEUE'] = uploads_queue
-    app.config['DB'] = PG(settings.db_host, settings.db_user, settings.db_pass, settings.db_name)
+    app.config['DB'] = DB(settings.db_path)
 
     image_ai = AI(settings.captions_model_path)
     if not args.no_ai:
@@ -393,7 +409,7 @@ def cmd_start(args=None):
 
     global process_worker
     process_worker = ProcessWorker(
-        PG(settings.db_host, settings.db_user, settings.db_pass, settings.db_name),
+        app.config['DB'],
         image_ai,
         uploads_queue,
         interval=args.polling_interval)

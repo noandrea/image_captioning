@@ -6,3 +6,6 @@ train
 p3dn
 .vscode
 settings.json
+uploads
+models
+sqlite.db
