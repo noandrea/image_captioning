@@ -161,7 +161,7 @@ class AI(object):
         self.model.load(self.sess, self.model_path)
         tf.get_default_graph().finalize()
 
-    def xxx_imag(self, image_path):
+    def image_caption(self, image_path):
         # this is what it should do
         data, vocabulary = prepare_test_data(self.config, image_path=image_path)
         caption, score = self.model.caption(self.sess, data, vocabulary)
@@ -272,9 +272,11 @@ def upload_file():
         return redirect(request.url)
     if file and allowed_file(file.filename):
         filename = secure_filename(file.filename)
-        file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-        app.config['UPLOAD_QUEUE'].put(filename)
-        return redirect(url_for('uploaded_file', filename=filename))
+        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        file.save(filepath)
+        # generate the caption
+        app.config['UPLOAD_QUEUE'].put(filepath)
+        return redirect("/")
 
     return '''
     <!doctype html>
@@ -334,18 +336,20 @@ class ProcessWorker(object):
             logging.info(f"process image {imagpath}")
             with open(imagpath, 'rb') as fp:
                 # calculate the digest
-                hexdigest = blake2b(data=fp.read(), digest_size=64, encoder=nacl.encoding.HexEncoder)
-                row = self.db.select("select caption from captions where hexdigest = ?", (hexdigest,))
+                hexdigest = blake2b(data=fp.read(), digest_size=64, encoder=nacl.encoding.HexEncoder).decode("utf-8")
+                row = self.db.select("select caption from captions where hexdigest = %s", (hexdigest,))
                 if row is not None:
                     # image exists
                     caption = row.get('caption')
+                    logging.info(f"image {imagpath}, caption {caption}, already processed ")
                 else:
                     # generate caption
                     caption, p = self.ai.image_caption(imagpath)
                     # this will als
-                    self.db.execute("insert into captions(hexdigest,file_name, caption,probability) values (?,?,?,?)",
+                    self.db.execute("insert into captions(hexdigest,file_name, caption,probability) values (%s,%s,%s,%s)",
                                     (hexdigest, os.path.basename(imagpath), caption, p))
-                emit("describe", {"digest": hexdigest, "caption": caption})
+                    logging.info(f"image {imagpath}, caption {caption}, {p}")
+                # emit("describe", {"digest": hexdigest, "caption": caption})
 
 
 #     ______  ____    ____  ______     ______
