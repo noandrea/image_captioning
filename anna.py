@@ -113,7 +113,7 @@ class DB(object):
                 for idx, col in enumerate(cursor.description):
                     d[col[0]] = row[idx]
                 return d
-            
+
             conn.row_factory = dict_factory
             yield conn.cursor()
         finally:
@@ -361,8 +361,12 @@ class ProcessWorker(object):
                     logging.info(f"image {imagpath}, caption {caption}, already processed ")
                 else:
                     logging.info(f"generate caption for {imagpath} started")
-                    # generate caption
-                    caption, p = self.ai.image_caption(imagpath)
+                    try:
+                        # generate caption
+                        caption, p = self.ai.image_caption(imagpath)
+                    except Exception as e:
+                        logging.error(f"caption for {imagpath} error: {e}")
+
                     # this will als
                     self.db.execute("insert into captions(hexdigest,file_name, caption,probability) values (?,?,?,?)",
                                     (hexdigest, os.path.basename(imagpath), caption, p))
