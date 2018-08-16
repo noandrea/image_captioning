@@ -319,7 +319,7 @@ class ProcessWorker(object):
     Poll the bar account to look for transactions
     """
 
-    def __init__(self,  db, ai, orders_queue, interval=15):
+    def __init__(self,  db, ai, orders_queue, interval=3):
         """ Constructor
         :type db: PG
         :param db: object for database connection
@@ -353,12 +353,14 @@ class ProcessWorker(object):
             with open(imagpath, 'rb') as fp:
                 # calculate the digest
                 hexdigest = blake2b(data=fp.read(), digest_size=64, encoder=nacl.encoding.HexEncoder).decode("utf-8")
+                logging.info(f"digest for  {imagpath} is {hexdigest}")
                 row = self.db.select("select caption from captions where hexdigest = ?", (hexdigest,))
                 if row is not None:
                     # image exists
                     caption = row.get('caption')
                     logging.info(f"image {imagpath}, caption {caption}, already processed ")
                 else:
+                    logging.info(f"generate caption for {imagpath} started")
                     # generate caption
                     caption, p = self.ai.image_caption(imagpath)
                     # this will als
