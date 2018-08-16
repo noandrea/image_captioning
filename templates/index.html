@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+  <title>Anna AI</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="format-detection" content="telephone=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+
+  <style type="text/css">
+    html body {
+      font-family: 'Courier New', Courier, monospace;
+      text-align: center;
+    }
+
+    .block {
+      margin-bottom: 12px;
+    }
+
+    .block::first-letter {
+      text-transform: uppercase;
+    }
+
+    .ts {
+      font-size: 8px;
+      color: #ccc;
+      border-top: 1px solid #ccc;
+    }
+
+    .intro {
+      margin: 1rem 0;
+    }
+
+    #input--file {
+      position: relative;
+      color: #7f7f7f;
+      margin-bottom: 1rem;
+    }
+
+    #input--file input[type="file"] {
+      position: absolute;
+      top: 0;
+      left: 0;
+      opacity: 0;
+      width: 100vw; 
+    }
+  </style>
+</head>
+
+<body class="home">
+  <h1>Anna AI</h1>
+  <div class="intro">
+    Hello I am d0jo9aeh1asd0. And this is what I saw.
+  </div>
+
+  <div id="input--file">
+    <span>
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="3.2" />
+        <path d="M9 2l-1.83 2h-3.17c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2v-12c0-1.1-.9-2-2-2h-3.17l-1.83-2h-6zm3 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"
+        />
+        <path d="M0 0h24v24h-24z" fill="none" />
+      </svg>
+    </span>
+    <input id="pic" type="file" name="file" accept="image/*" capture="camera">
+  </div>
+
+  <div>
+    {% for r in rows %}
+    <div class="block">
+      <div>{{ r[0] }}</div>
+      <span class="ts">{{ r[1] }}</span>
+    </div>
+    {% endfor %}
+  </div>
+
+  <script type="text/javascript">
+    console.log("designed and build by andrea giacobino <write@adgb.me>  https://adgb.me")
+    var pic = document.getElementById('pic');
+    function sendPic() {
+      var file = pic.files[0];
+      var form = new FormData(),
+        xhr = new XMLHttpRequest();
+      form.append('file', file);
+      xhr.open('post', 'upload', true);
+      xhr.send(form);
+      console.log("sent");
+      var inf = document.getElementById('input--file');
+      inf.innerHTML = "Now I need some time to think and understand.";
+      setTimeout("location.reload(true);", 30000);
+    }
+    pic.addEventListener('change', sendPic, false);
+  </script>
+</body>
+
+</html>

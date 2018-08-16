@@ -16,7 +16,7 @@ from queue import Queue
 import time
 
 # flask
-from flask import Flask, jsonify, abort, flash, request, redirect, url_for
+from flask import Flask, jsonify, abort, flash, request, redirect, url_for, render_template
 from flask_socketio import SocketIO, emit
 from werkzeug.utils import secure_filename
 
@@ -252,8 +252,10 @@ def allowed_file(filename):
 
 @app.route('/', methods=['GET'])
 def home():
-    rows = app.config['DB'].select("select * from captions", multi=True)
-    return '\n'.join([r['caption'] for r in rows])
+    rows = app.config['DB'].select("select * from captions order by created_at desc", many=True)
+    lines = [(r['caption'], r['created_at']) for r in rows]
+    # TODO: add dates to the lines
+    return render_template('index.html', rows=lines)
 
 
 @app.route('/upload', methods=['POST'])
