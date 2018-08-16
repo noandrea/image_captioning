@@ -8,6 +8,7 @@ services:
       - "8090:5000"
     volumes:
       - ./data/dn2018/app/settings.json:/data/settings.json
+      - ./data/dn2018/app/uploads:/data/uploads
       - ./data/dn2018/app/db:/data/db
       - ./data/dn2018/app/models:/data/models:ro
 

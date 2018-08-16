@@ -1,0 +1,7 @@
+{
+  "flask_secret": "FouNBourbJxJ0l9Z7J7QCFKwY3Ay4fTZiSJ4pY1q9axlg6mrLk",
+  "access_key": "silence",
+  "db_path": "/data/db/sqlite.db",
+  "upload_path": "uploads",
+  "captions_model_path": "/data/models/origin_289999.npy"
+}

@@ -35,7 +35,8 @@ docker-push-app:
 	@echo done
 
 docker-run-app: 
-	@docker run -p 5000:5000 $(DOCKER_IMAGE_APP) 
+	@echo running the app via docker-compose
+	@docker-compose --project-directory . -f ./build/docker/app/docker-compose.local.yml up
 
 docker-build-training:
 	@echo build image

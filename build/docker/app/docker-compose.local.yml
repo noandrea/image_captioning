@@ -7,8 +7,9 @@ services:
     ports:
       - "8090:5000"
     volumes:
-      - ./settings.json:/data/settings.json:ro
+      - ./config/settings.local.json:/data/settings.json:ro
       - ./db:/data/db
+      - ./uploads:/data/uploads
       - ./models:/data/models:ro
 
 
